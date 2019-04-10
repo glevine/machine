@@ -14,18 +14,30 @@ fancy_echo() {
 append_to_file() {
     local file="$1"
     local text="$2"
+    local skip_new_line="${3:-0}"
 
     if [ ! -f "$file" ]; then
         touch "$file"
+
+        # No need to add a new line if the file is brand new.
+        skip_new_line=1
     fi
 
-    if ! grep -qs "^$text$" "$file"; then
-        printf "\\n%s\\n" "$text" >>"$file"
+    if ! grep -Fqs "^$text$" "$file"; then
+        if [ "$skip_new_line" -eq 1 ]; then
+            printf "%s\\n" "$text" >>"$file"
+        else
+            printf "\\n%s\\n" "$text" >>"$file"
+        fi
     fi
 }
 
 add_to_path() {
-    append_to_file "$HOME/.localrc" "export PATH=\"$1:\$PATH\""
+    local text="$1"
+
+    # Assumes a comment precedes this line.
+    append_to_file "$HOME/.localrc" "export PATH=\"$text:\$PATH\"" 1
+
     export PATH="$1:$PATH"
 }
 
@@ -43,29 +55,12 @@ github_ssh_key() {
     ssh-keygen -t rsa -b 4096
     eval "$(ssh-agent -s)"
 
-    # TODO: Only append to ~/.ssh/config if those lines aren't already there.
-    cat <<EOF >>~/.ssh/config
-Host *
-  AddKeysToAgent yes
-  UseKeychain yes
-  IdentityFile ~/.ssh/id_rsa
-EOF
+    append_to_file "$HOME/.ssh/config" "Host *"
+    append_to_file "$HOME/.ssh/config" "  AddKeysToAgent yes" 1
+    append_to_file "$HOME/.ssh/config" "  UseKeychain yes" 1
+    append_to_file "$HOME/.ssh/config" "  IdentityFile ~/.ssh/id_rsa" 1
 
     ssh-add -K "$HOME/.ssh/id_rsa"
-}
-
-homebrew_install_or_update() {
-    if ! command -v brew >/dev/null; then
-        fancy_echo "Installing Homebrew ..."
-        curl -fsSL "https://raw.githubusercontent.com/Homebrew/install/master/install" | ruby
-
-        append_to_file "$HOME/.localrc" "# Recommended by brew doctor"
-
-        add_to_path "/usr/local/bin"
-    else
-        fancy_echo "Updating Homebrew ..."
-        brew update
-    fi
 }
 
 # shellcheck disable=SC2154
@@ -117,45 +112,58 @@ pbcopy <"$HOME/.ssh/id_rsa.pub"
 fancy_echo "... Your SSH key was copied to your clipboard. If needed, go to https://github.com/settings/ssh/new to add your SSH key to Github. I'll wait for you."
 wait_for_user
 
-homebrew_install_or_update
+# Homebrew is the source of so much.
+if ! command -v brew >/dev/null; then
+    fancy_echo "Installing Homebrew ..."
+    curl -fsSL "https://raw.githubusercontent.com/Homebrew/install/master/install" | ruby
 
-fancy_echo "Can't live without zsh ..."
+    append_to_file "$HOME/.localrc" "# Recommended by brew doctor."
+    add_to_path "/usr/local/bin"
+else
+    fancy_echo "Updating Homebrew ..."
+    brew update
+fi
 
-brew install zsh
-chsh -s /bin/zsh
+# Switch to zsh.
+if [ "$(command -v zsh)" != '/usr/local/bin/zsh' ]; then
+    fancy_echo "Can't live without zsh ..."
 
-fancy_echo "... and better yet, oh my zsh!"
-curl -fsSL "https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh" | sh
+    brew install zsh
+    chsh -s /bin/zsh
 
-fancy_echo "... with some plugins"
+    fancy_echo "... and better yet, oh my zsh!"
+    curl -fsSL "https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh" | sh
 
-# zsh-autosuggestions
-git clone https://github.com/zsh-users/zsh-autosuggestions "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
+    fancy_echo "... with some plugins"
 
-# zsh-completions
-git clone https://github.com/zsh-users/zsh-completions "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-completions"
+    # zsh-autosuggestions
+    git clone https://github.com/zsh-users/zsh-autosuggestions "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
 
-# zsh-syntax-highlighting
-git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
+    # zsh-completions
+    git clone https://github.com/zsh-users/zsh-completions "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-completions"
 
-append_to_file "$HOME/.localrc" ""
-append_to_file "$HOME/.localrc" "# zsh-syntax-highlighting must be last"
-append_to_file "$HOME/.localrc" "# Others worth considering: git-prompt, jump (Does it overlap with autojump?), kubectrl, minikube, per-directory-history (Does it overlap with dirhistory or history?), pj (Does it overlap with autojump?), thefuck (Conflicts with sudo.), vagrant-prompt, z (Does it overlap with autojump?), zsh-navigation-tools"
-append_to_file "$HOME/.localrc" "plugins=(asdf autojump colored-man-pages command-not-found common-aliases compleat copybuffer copydir copyfile cp dirhistory dirpersist docker docker-compose dotenv extract git golang heroku history iwhois last-working-dir lol man npm osx perms sublime sudo themes timer tmux urltools vagrant vault web-search yarn wd zsh_reload zsh-history-substring-search zsh-autosuggestions zsh-completions zsh-syntax-highlighting)"
+    # zsh-syntax-highlighting
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
 
-fancy_echo "... and better command history searching with arrow keys"
-append_to_file "$HOME/.localrc" ""
-append_to_file "$HOME/.localrc" "# Search history with arrow keys"
-append_to_file "$HOME/.localrc" "autoload -U up-line-or-beginning-search"
-append_to_file "$HOME/.localrc" "autoload -U down-line-or-beginning-search"
-append_to_file "$HOME/.localrc" "zle -N up-line-or-beginning-search"
-append_to_file "$HOME/.localrc" "zle -N down-line-or-beginning-search"
-append_to_file "$HOME/.localrc" "bindkey \"^[[A\" up-line-or-beginning-search # Up"
-append_to_file "$HOME/.localrc" "bindkey \"^[[B\" down-line-or-beginning-search # Down"
-fancy_echo "... learn how to search your command history at https://coderwall.com/p/jpj_6q/zsh-better-history-searching-with-arrow-keys"
+    append_to_file "$HOME/.localrc" "# oh-my-zsh plugins"
+    append_to_file "$HOME/.localrc" "# zsh-syntax-highlighting must be last" 1
+    append_to_file "$HOME/.localrc" "# Others worth considering: git-prompt, jump (Does it overlap with autojump?), kubectrl, minikube, per-directory-history (Does it overlap with dirhistory or history?), pj (Does it overlap with autojump?), thefuck (Conflicts with sudo.), vagrant-prompt, z (Does it overlap with autojump?), zsh-navigation-tools" 1
+    append_to_file "$HOME/.localrc" "plugins=(asdf autojump colored-man-pages command-not-found common-aliases compleat copybuffer copydir copyfile cp dirhistory dirpersist docker docker-compose dotenv extract git golang heroku history iwhois last-working-dir lol man npm osx perms sublime sudo themes timer tmux urltools vagrant vault web-search yarn wd zsh_reload zsh-history-substring-search zsh-autosuggestions zsh-completions zsh-syntax-highlighting)" 1
 
-# Add ~/.localrc to ~/.zshrc.
-append_to_file "$HOME/.zshrc" "source \$HOME/.localrc"
+    fancy_echo "... and better command history searching with arrow keys"
+    append_to_file "$HOME/.localrc" "# Search history with arrow keys."
+    append_to_file "$HOME/.localrc" "autoload -U up-line-or-beginning-search" 1
+    append_to_file "$HOME/.localrc" "autoload -U down-line-or-beginning-search" 1
+    append_to_file "$HOME/.localrc" "zle -N up-line-or-beginning-search" 1
+    append_to_file "$HOME/.localrc" "zle -N down-line-or-beginning-search" 1
+    append_to_file "$HOME/.localrc" "bindkey \"^[[A\" up-line-or-beginning-search # Up" 1
+    append_to_file "$HOME/.localrc" "bindkey \"^[[B\" down-line-or-beginning-search # Down" 1
+    fancy_echo "... learn how to search your command history at https://coderwall.com/p/jpj_6q/zsh-better-history-searching-with-arrow-keys"
+
+    # Add ~/.localrc to ~/.zshrc.
+    append_to_file "$HOME/.zshrc" "# $HOME/.localrc is where all of the customizations are."
+    append_to_file "$HOME/.zshrc" "source \$HOME/.localrc" 1
+fi
 
 fancy_echo "Let's have a round of the usual brews ..."
 brew bundle --file=- <<EOF
@@ -226,12 +234,12 @@ fancy_echo "Writing to NTFS drives is a must ..."
 # TODO
 fancy_echo "... achievement unlocked!"
 
-append_to_file "$HOME/.localrc" ""
-append_to_file "$HOME/.localrc" "# Add Visual Studio Code (code)"
+append_to_file "$HOME/.localrc" "# Add Visual Studio Code (code)."
 add_to_path "/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
 fancy_echo "Now you can use \`code\` in your terminal to launch Visual Studio Code"
 
 fancy_echo "Let me configure Git for you..."
+
 read -r -p "What is your name?" username
 git config --global user.name "$username"
 read -r -p "What is your email address?" email
@@ -262,8 +270,8 @@ git config --global push.default simple
 # Always ignore these files.
 git config --global core.excludesfile ~/.gitignore
 append_to_file "$HOME/.gitignore" "*~"
-append_to_file "$HOME/.gitignore" ".*.swp"
-append_to_file "$HOME/.gitignore" ".DS_Store"
+append_to_file "$HOME/.gitignore" ".*.swp" 1
+append_to_file "$HOME/.gitignore" ".DS_Store" 1
 
 fancy_echo "... Git configurations live at $HOME/.gitconfig"
 
@@ -272,6 +280,7 @@ gist --login
 fancy_echo "... now we can move on from Git"
 
 fancy_echo "Installing asdf for managing language & runtime versions ..."
+
 brew bundle --file=- <<EOF
 brew "asdf"
 brew "autoconf"
@@ -286,10 +295,9 @@ brew "readline"
 brew "unixodbc"
 EOF
 
-append_to_file "$HOME/.localrc" ""
-append_to_file "$HOME/.localrc" "# Add asdf"
-append_to_file "$HOME/.localrc" "source \$HOME/.asdf/asdf.sh"
-append_to_file "$HOME/.localrc" "source \$HOME/.asdf/completions/asdf.bash"
+append_to_file "$HOME/.localrc" "# Add asdf."
+append_to_file "$HOME/.localrc" "source \$HOME/.asdf/asdf.sh" 1
+append_to_file "$HOME/.localrc" "source \$HOME/.asdf/completions/asdf.bash" 1
 
 fancy_echo "... let's install Node.js because you'll end up using it across just about all projects"
 asdf plugin-add nodejs
@@ -301,9 +309,8 @@ asdf global nodejs 11.13.0
 if [ ! -d "$HOME/bin/" ]; then
     mkdir "$HOME/bin"
 fi
-append_to_file "$HOME/.localrc" ""
 append_to_file "$HOME/.localrc" "# Add ~/bin to your path. It's last because this is a fallback."
-append_to_file "$HOME/.localrc" "export PATH=\"\$PATH:\$HOME/bin\""
+append_to_file "$HOME/.localrc" "export PATH=\"\$PATH:\$HOME/bin\"" 1
 fancy_echo "$HOME/bin has been created for your convenience. Drop binaries in there if you need a place to put them."
 
 # shellcheck source=/dev/null

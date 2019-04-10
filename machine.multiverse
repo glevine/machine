@@ -14,37 +14,35 @@ fancy_echo() {
 append_to_file() {
     local file="$1"
     local text="$2"
+    local skip_new_line="${3:-0}"
 
     if [ ! -f "$file" ]; then
         touch "$file"
+
+        # No need to add a new line if the file is brand new.
+        skip_new_line=1
     fi
 
-    if ! grep -qs "^$text$" "$file"; then
-        printf "\\n%s\\n" "$text" >>"$file"
+    if ! grep -Fqs "^$text$" "$file"; then
+        if [ "$skip_new_line" -eq 1 ]; then
+            printf "%s\\n" "$text" >>"$file"
+        else
+            printf "\\n%s\\n" "$text" >>"$file"
+        fi
     fi
 }
 
 add_to_path() {
-    append_to_file "$HOME/.localrc" "export PATH=\"$1:\$PATH\""
+    local text="$1"
+
+    # Assumes a comment precedes this line.
+    append_to_file "$HOME/.localrc" "export PATH=\"$text:\$PATH\"" 1
+
     export PATH="$1:$PATH"
 }
 
 go_home() {
     cd "$HOME"
-}
-
-homebrew_install_or_update() {
-    if ! command -v brew >/dev/null; then
-        fancy_echo "Installing Homebrew ..."
-        curl -fsSL "https://raw.githubusercontent.com/Homebrew/install/master/install" | ruby
-
-        append_to_file "$HOME/.localrc" "# Recommended by brew doctor"
-
-        add_to_path "/usr/local/bin"
-    else
-        fancy_echo "Updating Homebrew ..."
-        brew update
-    fi
 }
 
 # shellcheck disable=SC2154
@@ -61,7 +59,17 @@ EOF
 # Start at home.
 go_home
 
-homebrew_install_or_update
+# Homebrew is the source of so much.
+if ! command -v brew >/dev/null; then
+    fancy_echo "Installing Homebrew ..."
+    curl -fsSL "https://raw.githubusercontent.com/Homebrew/install/master/install" | ruby
+
+    append_to_file "$HOME/.localrc" "# Recommended by brew doctor."
+    add_to_path "/usr/local/bin"
+else
+    fancy_echo "Updating Homebrew ..."
+    brew update
+fi
 
 fancy_echo "Installing some software you're going to need ..."
 brew bundle --file=- <<EOF
@@ -86,7 +94,7 @@ fancy_echo "... I dealt with the submodules for you"
 # Back to home.
 go_home
 
-append_to_file "$HOME/.localrc" "# multiverse/tools/bin should be in your path"
+append_to_file "$HOME/.localrc" "# multiverse/tools/bin should be in your path."
 add_to_path "\$HOME/multiverse/tools/bin"
 fancy_echo "... the multiverse tools are now in your path"
 

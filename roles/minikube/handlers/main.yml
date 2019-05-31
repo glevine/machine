@@ -1,0 +1,4 @@
+- name: cleanup docker-machine-driver-hyperkit
+  file:
+    path: docker-machine-driver-hyperkit
+    state: absent

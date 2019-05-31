@@ -1,0 +1,15 @@
+---
+- name: exists?
+  shell: command -v bazel >/dev/null 2>&1
+  register: bazel
+  ignore_errors: yes
+- name: download installer
+  get_url:
+    url: https://github.com/bazelbuild/bazel/releases/download/{{ bazel_version }}/bazel-{{ bazel_version }}-installer-darwin-x86_64.sh
+    dest: /usr/local/bin/bazel-{{ bazel_version }}-installer-darwin-x86_64.sh
+    mode: 0755
+  when: bazel.rc != 0
+  notify: cleanup installer
+- name: install
+  command: /usr/local/bin/bazel-{{ bazel_version }}-installer-darwin-x86_64.sh
+  when: bazel.rc != 0

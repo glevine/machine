@@ -1,0 +1,8 @@
+---
+- name: install
+  homebrew_cask:
+    name: visual-studio-code
+    accept_external_apps: yes
+- name: extensions
+  command: code --install-extension {{ item }}
+  loop: "{{ extensions }}"

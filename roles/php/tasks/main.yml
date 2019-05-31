@@ -1,0 +1,10 @@
+---
+- name: install
+  homebrew:
+    name: php
+  notify: start php
+- name: path
+  lineinfile:
+    path: "{{ lookup('env','HOME') }}/.machine"
+    create: yes
+    line: export PATH="$(brew --prefix php)/bin:$PATH"

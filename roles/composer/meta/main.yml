@@ -1,0 +1,6 @@
+---
+dependencies:
+  - role: homebrew
+  # Composer needs a recent version of PHP. Some Mango dependencies -- installed
+  # via composer -- require ext-gmp. Homebrew's PHP comes with ext-gmp.
+  - role: php

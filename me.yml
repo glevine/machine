@@ -1,0 +1,168 @@
+---
+- hosts: all
+  connection: local
+  vars_prompt:
+    - name: git_user_name
+      prompt: What is your Git author name?
+      private: no
+    - name: git_user_email
+      prompt: What is your Git email address?
+      private: no
+  tasks:
+  - name: add ansible to the path
+    lineinfile:
+      path: "{{ lookup('env','HOME') }}/.machine"
+      create: yes
+      line: export PATH="$(python -c 'import site; print(site.USER_BASE + "/bin")'):$PATH"
+  - include_role:
+      name: macos
+  - include_role:
+      name: ssh
+  - include_role:
+      name: homebrew
+  - include_role:
+      name: mas
+  - include_role:
+      name: ohmyzsh
+    vars:
+      # Plugins are in reverse order because the ohmyzsh role will add plugins to the beginning of the array
+      # to guarantee that zsh-syntax-highlighting is last.
+      # source: https://github.com/zsh-users/zsh-syntax-highlighting/blob/master/INSTALL.md#with-a-plugin-manager
+      # Others worth considering: git-prompt, jump (Does it overlap with autojump?), kubectrl, minikube, per-directory-history (Does it overlap with dirhistory or history?), pj (Does it overlap with autojump?), thefuck (Conflicts with sudo.), vagrant (Does it overlap with Homebrew's vagrant-completion?), vagrant-prompt, z (Does it overlap with autojump?), zsh-navigation-tools.
+      plugins:
+       - zsh-syntax-highlighting
+       - zsh-completions
+       - zsh-autosuggestions
+       - zsh-history-substring-search
+       - zsh_reload
+       - yarn
+       - web-search
+       - wd
+       - vault
+       - urltools
+       - tmux
+       - timer
+       - themes
+       - sudo
+       - sublime
+       - perms
+       - osx
+       - npm
+       - man
+       - lol
+       - last-working-dir
+       - iwhois
+       - history
+       - heroku
+       - git
+       - extract
+       - dotenv
+       - dirpersist
+       - dirhistory
+       - cp
+       - copyfile
+       - copydir
+       - copybuffer
+       - compleat
+       - common-aliases
+       - command-not-found
+       - colored-man-pages
+       - autojump
+  - include_role:
+      name: tmux
+  - include_role:
+      name: vscode
+    vars:
+      extensions:
+        - davidanson.vscode-markdownlint
+        - dbaeumer.vscode-eslint
+        - eamodio.gitlens
+        - foxundermoon.shell-format
+        - github.vscode-pull-request-github
+        - ms-azuretools.vscode-docker
+        - redhat.vscode-yaml
+  - include_role:
+      name: git
+    vars:
+      configurations:
+        - { name: user.name, value: "{{ git_user_name }}" }
+        - { name: user.email, value: "{{ git_user_email }}" }
+        - { name: credential.helper, value: osxkeychain }
+        - { name: alias.amend, value: commit --amend }
+        - { name: alias.b, value: branch }
+        - { name: alias.co, value: checkout }
+        - { name: alias.cob, value: checkout -b }
+        - { name: alias.cp, value: cherry-pick }
+        - { name: alias.r, value: remote -v }
+        - { name: alias.ra, value: remote add }
+        - { name: alias.rb, value: rebase -i }
+        - { name: alias.smi, value: submodule init }
+        - { name: alias.smu, value: submodule update }
+        - { name: alias.st, value: status }
+        - { name: alias.unstage, value: reset --soft HEAD^ }
+        - { name: core.autocrlf, value: input }
+        - { name: core.editor, value: code --wait }
+        - { name: core.excludesfile, value: "{{ lookup('env','HOME') }}/.gitignore" }
+        - { name: core.whitespace, value: "-blank-at-eof,tab-in-indent" }
+        - { name: diff.tool, value: vscode }
+        - { name: difftool.vscode.cmd, value: code --wait --diff $LOCAL $REMOTE }
+        - { name: difftool.prompt, value: "false" }
+        - { name: help.autocorrect, value: 1 }
+        - { name: mergetool.keepBackup, value: "false" }
+        - { name: push.default, value: simple }
+  - homebrew:
+      name: "{{ item }}"
+    loop:
+      - ack
+      - asciinema
+      - base64
+      - cheat
+      - coreutils
+      - dateutils
+      - ffind
+      - grc
+      - grep
+      - handbrake
+      - jq
+      - openssl
+      - osxutils
+      - parallel
+      - rename
+      - shellcheck
+      - the_silver_searcher
+      - vim
+      - wget
+  - homebrew_cask:
+      name: "{{ item }}"
+      accept_external_apps: yes
+    loop:
+      - amazon-photos
+      - anki
+      - appcleaner
+      - docker
+      - dropbox
+      - gimp
+      - google-chrome
+      - grammarly
+      - logitech-myharmony
+      - netspot
+      - ngrok
+      - onedrive
+      - paragon-ntfs
+      - plex-media-player
+      - postman
+      - sourcetree
+      - sublime-text
+      - vlc
+  - name: mas
+    command: mas install {{ item.id }}
+    loop:
+      - { id: 937984704, name: "amphetamine" }
+      - { id: 406056744, name: "evernote" }
+      - { id: 803453959, name: "slack" }
+  - include_role:
+      name: volta
+  - name: node
+    shell: $HOME/.volta/volta install node
+  - name: yarn
+    shell: $HOME/.volta/volta install yarn

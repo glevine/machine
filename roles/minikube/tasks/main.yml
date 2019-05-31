@@ -1,0 +1,30 @@
+---
+- name: install
+  homebrew_cask:
+    name: minikube
+    accept_external_apps: yes
+- name: hyperkit
+  homebrew:
+    name: hyperkit
+- name: docker-machine-driver-hyperkit
+  shell: curl -LO https://storage.googleapis.com/minikube/releases/latest/docker-machine-driver-hyperkit && sudo install -o root -g wheel -m 4755 docker-machine-driver-hyperkit /usr/local/bin/
+  become: true
+  args:
+    warn: no
+  notify: cleanup docker-machine-driver-hyperkit
+- name: use hyperkit
+  command: minikube config set vm-driver hyperkit
+- name: start
+  command: minikube start
+- name: addons
+  command: minikube addons enable {{ item }}
+  loop:
+    - ingress
+    - heapster
+- name: hosts
+  become: true
+  lineinfile:
+    path: /etc/hosts
+    create: yes
+    line: "{{ item }}"
+  loop: "{{ hosts }}"

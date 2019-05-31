@@ -1,0 +1,27 @@
+---
+- name: exists?
+  shell: command -v volta >/dev/null 2>&1
+  register: volta
+  ignore_errors: yes
+# The volta installer is built for bash. It requires that at least one of the
+# standard configuration files exists for bash or another shell. Since it isn't
+# always known at run-time which shell the user wants, install volta with bash
+# to allow the installer to complete successfully in any environment.
+- name: ensure $HOME/.bashrc
+  file:
+    path: "{{ lookup('env','HOME') }}/.bashrc"
+    state: touch
+- name: install
+  shell: curl -sSLf https://get.volta.sh | SHELL=/bin/bash bash
+  args:
+    warn: no
+  when: volta.rc != 0
+- name: path
+  lineinfile:
+    path: "{{ lookup('env','HOME') }}/.machine"
+    create: yes
+    line: "{{ item }}"
+  loop:
+    - export VOLTA_HOME="$HOME/.volta"
+    - '[ -s "$VOLTA_HOME/load.sh" ] && . "$VOLTA_HOME/load.sh"'
+    - export PATH="$VOLTA_HOME/bin:$PATH"

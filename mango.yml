@@ -1,0 +1,56 @@
+---
+- hosts: all
+  connection: local
+  vars_prompt:
+    - name: github_username
+      prompt: What is your Github username?
+      private: no
+    - name: setup_license_key
+      prompt: Enter a license key for Mango
+      private: no
+  tasks:
+  - include_role:
+      name: mango
+  - include_role:
+      name: vscode
+    vars:
+      extensions:
+        - felixfbecker.php-debug
+        - ikappas.phpcs
+  - include_role:
+      name: volta
+  - name: node
+    # Sidecar requires a Node.js >= 8.9.2. Seedbed requires 8.x. Sidecar docs
+    # require 6.x.
+    shell: $HOME/.volta/volta fetch node@8.9
+  - name: yarn
+    shell: $HOME/.volta/volta install yarn
+  # Docker is used for e2e tests.
+  - include_role:
+      name: docker
+  # Install some tools for assessing if PHP code meets Sugar's coding standards.
+  - include_role:
+      name: homebrew
+  - homebrew:
+      name: "{{ item }}"
+    loop:
+      - php-code-sniffer
+      - phpmd
+  - name: git-psr2
+    get_url:
+      url: https://raw.githubusercontent.com/alias-mac/dotfiles/master/bin/git-psr2
+      dest: /usr/local/bin/git-psr2
+      mode: 0755
+  # Install tools for building Mango.
+  - include_role:
+      name: rome
+  - include_role:
+      name: stacks
+  - include_role:
+      name: rome2stack
+  - include_role:
+      name: ohmyzsh
+    vars:
+      plugins:
+       - docker
+       - docker-compose

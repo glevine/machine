@@ -1,0 +1,4 @@
+- name: cleanup installer
+  file:
+    path: /usr/local/bin/bazel-{{ bazel_version }}-installer-darwin-x86_64.sh
+    state: absent

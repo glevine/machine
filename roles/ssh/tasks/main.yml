@@ -1,0 +1,13 @@
+---
+# source: https://help.github.com/en/articles/connecting-to-github-with-ssh
+- name: ensure $HOME/.ssh/
+  file:
+    path: "{{ lookup('env','HOME') }}/.ssh"
+    state: directory
+- name: configure
+  copy:
+    src: config
+    dest: "{{ lookup('env','HOME') }}/.ssh/config"
+- name: generate ssh key
+  openssh_keypair:
+    path: "{{ lookup('env','HOME') }}/.ssh/id_rsa"

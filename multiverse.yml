@@ -1,0 +1,51 @@
+---
+- hosts: all
+  connection: local
+  vars_prompt:
+    - name: github_username
+      prompt: What is your Github username?
+      private: no
+  tasks:
+  - include_role:
+      name: multiverse
+  - include_role:
+      name: vscode
+    vars:
+      extensions:
+        - googlecloudtools.cloudcode
+        - ms-kubernetes-tools.vscode-kubernetes-tools
+        - ms-vscode.go
+        - zxh404.vscode-proto3
+  - include_role:
+      name: golang
+  - include_role:
+      name: volta
+  - name: node
+    shell: $HOME/.volta/volta fetch node
+  - name: yarn
+    shell: $HOME/.volta/volta install yarn
+  - include_role:
+      name: bazel
+    vars:
+      bazel_version: "0.25.3"
+  - include_role:
+      name: scloud
+  - include_role:
+      name: minikube
+    vars:
+      hosts:
+        - 127.0.0.1 velcro-office365-rest.sugar.multiverse
+  - include_role:
+      name: homebrew
+  - homebrew:
+      name: "{{ item }}"
+    loop:
+      - awscli
+      - hugo
+  - include_role:
+      name: ohmyzsh
+    vars:
+      plugins:
+       - docker
+       - docker-compose
+       - golang

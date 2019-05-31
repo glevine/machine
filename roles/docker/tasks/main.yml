@@ -1,0 +1,5 @@
+---
+- name: install
+  homebrew_cask:
+    name: docker
+    accept_external_apps: yes

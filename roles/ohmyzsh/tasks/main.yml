@@ -1,0 +1,45 @@
+---
+- name: exists?
+  stat:
+    path: "{{ lookup('env','HOME') }}/.oh-my-zsh"
+  register: ohmyzsh
+- name: install
+  # Trick the oh my zsh! installer into thinking that the terminal was restarted after changing the login shell.
+  shell: curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh | SHELL=/usr/local/bin/zsh sh
+  args:
+    warn: no
+  when: not ohmyzsh.stat.exists
+- shell: echo "${ZSH_CUSTOM:-{{ lookup('env','HOME') }}/.oh-my-zsh/custom}"
+  register: zsh_custom
+- name: zsh-autosuggestions
+  git:
+    repo: https://github.com/zsh-users/zsh-autosuggestions
+    dest: "{{ zsh_custom.stdout }}/plugins/zsh-autosuggestions"
+- name: zsh-completions
+  git:
+    repo: https://github.com/zsh-users/zsh-completions
+    dest: "{{ zsh_custom.stdout }}/plugins/zsh-completions"
+- name: zsh-syntax-highlighting
+  git:
+    repo: https://github.com/zsh-users/zsh-syntax-highlighting
+    dest: "{{ zsh_custom.stdout }}/plugins/zsh-syntax-highlighting"
+- name: plugins
+  lineinfile:
+    path: "{{ lookup('env','HOME') }}/.machine"
+    create: yes
+    # Always preprend to guarantee that zsh-syntax-highlighting can be last.
+    line: plugins=({{ item }} "${plugins[@]}")
+  loop: "{{ plugins }}"
+# Learn how to search your command history at https://coderwall.com/p/jpj_6q/zsh-better-history-searching-with-arrow-keys.
+- name: search history with arrow keys
+  lineinfile:
+    path: "{{ lookup('env','HOME') }}/.machine"
+    create: yes
+    line: "{{ item }}"
+  loop:
+    - autoload -U up-line-or-beginning-search
+    - autoload -U down-line-or-beginning-search
+    - zle -N up-line-or-beginning-search
+    - zle -N down-line-or-beginning-search
+    - bindkey "^[[A" up-line-or-beginning-search
+    - bindkey "^[[B" down-line-or-beginning-search

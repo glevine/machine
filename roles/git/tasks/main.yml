@@ -1,0 +1,19 @@
+---
+- name: install
+  homebrew:
+    name: git
+- name: always ignore these files
+  lineinfile:
+    path: "{{ lookup('env','HOME') }}/.gitignore"
+    create: yes
+    line: "{{ item }}"
+  loop:
+    - "*~"
+    - ".*.swp"
+    - ".DS_Store"
+- name: configure
+  git_config:
+    name: "{{ item.name }}"
+    scope: global
+    value: "{{ item.value }}"
+  loop: "{{ configurations }}"

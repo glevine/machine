@@ -1,0 +1,9 @@
+---
+- name: install
+  homebrew:
+    name: "{{ item }}"
+  loop:
+    - go
+    - dep
+- name: delve
+  command: go get -u github.com/derekparker/delve/cmd/dlv

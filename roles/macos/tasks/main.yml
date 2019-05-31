@@ -1,0 +1,18 @@
+---
+# source: https://brettterpstra.com/2018/09/26/shell-tricks-toggling-dark-mode-from-terminal/
+- name: dark mode
+  shell: osascript -e 'tell app "System Events" to tell appearance preferences to set dark mode to true'
+# source: https://www.tech-otaku.com/mac/setting-the-date-and-time-format-for-the-macos-menu-bar-clock-using-terminal/
+- name: format clock
+  osx_defaults:
+    domain: com.apple.menuextra.clock
+    key: DateFormat
+    value: EEE MMM d h:mm:ss a
+  notify: restart ui
+- name: show battery %
+  osx_defaults:
+    domain: com.apple.menuextra.battery
+    key: ShowPercent
+    type: boolean
+    value: true
+  notify: restart ui

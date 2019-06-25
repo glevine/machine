@@ -1,9 +1,0 @@
----
-# osxfuse must be installed before ntfs-3g.
-- name: osxfuse
-  homebrew_cask:
-    name: osxfuse
-    accept_external_apps: yes
-- name: ntfs-3g
-  homebrew:
-    name: ntfs-3g

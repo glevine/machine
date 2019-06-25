@@ -85,27 +85,3 @@ curl -fsSL https://raw.githubusercontent.com/xdissent/ievms/master/ievms.sh | en
 ```
 
 Or just [download the VMs](https://developer.microsoft.com/en-us/microsoft-edge/tools/vms/) from modern.ie.
-
-## ntfs
-
-### Paragon NTFS for Mac
-
-```shell
-open /usr/local/Caskroom/paragon-ntfs/15/
-```
-
-Run the installer to install Paragon NTFS for Mac.
-
-### ntfs-3g
-
-_Note: The following steps do not work in macOS 10.14 (Mojave) Use Paragon NTFS for Mac instead._
-
-The software is installed using the `ntfs` role, but some manual steps are required to [auto-mount NTFS volumes](https://github.com/osxfuse/osxfuse/wiki/NTFS-3G) in read-write mode.
-
-To replace `/sbin/mount_ntfs` with the version provided by NTFS-3G, [reboot in recovery mode](https://support.apple.com/en-us/HT201314). Once in recovery mode, open Terminal from the Utilities menu and enter the following commands:
-
-```shell
-sudo mv "/Volumes/Macintosh HD/sbin/mount_ntfs" "/Volumes/Macintosh HD/sbin/mount_ntfs.orig"
-
-sudo ln -s /usr/local/sbin/mount_ntfs "/Volumes/Macintosh HD/sbin/mount_ntfs"
-```

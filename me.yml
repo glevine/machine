@@ -15,59 +15,13 @@
       create: yes
       line: export PATH="$(python -c 'import site; print(site.USER_BASE + "/bin")'):$PATH"
   - include_role:
-      name: macos
+      name: bash
   - include_role:
       name: ssh
   - include_role:
       name: homebrew
   - include_role:
       name: mas
-  - include_role:
-      name: ohmyzsh
-    vars:
-      # Plugins are in reverse order because the ohmyzsh role will add plugins to the beginning of the array
-      # to guarantee that zsh-syntax-highlighting is last.
-      # source: https://github.com/zsh-users/zsh-syntax-highlighting/blob/master/INSTALL.md#with-a-plugin-manager
-      # Others worth considering: git-prompt, jump (Does it overlap with autojump?), kubectrl, minikube, per-directory-history (Does it overlap with dirhistory or history?), pj (Does it overlap with autojump?), thefuck (Conflicts with sudo.), vagrant (Does it overlap with Homebrew's vagrant-completion?), vagrant-prompt, z (Does it overlap with autojump?), zsh-navigation-tools.
-      plugins:
-       - zsh-syntax-highlighting
-       - zsh-completions
-       - zsh-autosuggestions
-       - zsh-history-substring-search
-       - zsh_reload
-       - yarn
-       - web-search
-       - wd
-       - vault
-       - urltools
-       - tmux
-       - timer
-       - themes
-       - sudo
-       - sublime
-       - perms
-       - osx
-       - npm
-       - man
-       - lol
-       - last-working-dir
-       - iwhois
-       - history
-       - heroku
-       - git
-       - extract
-       - dotenv
-       - dirpersist
-       - dirhistory
-       - cp
-       - copyfile
-       - copydir
-       - copybuffer
-       - compleat
-       - common-aliases
-       - command-not-found
-       - colored-man-pages
-       - autojump
   - include_role:
       name: tmux
   - include_role:
@@ -136,23 +90,10 @@
       name: "{{ item }}"
       accept_external_apps: yes
     loop:
-      - amazon-photos
-      - anki
       - appcleaner
       - docker
-      - dropbox
-      - gimp
-      - google-chrome
-      - grammarly
-      - logitech-myharmony
-      - netspot
-      - ngrok
-      - onedrive
-      - plex-media-player
       - postman
-      - sourcetree
       - sublime-text
-      - vlc
   - name: mas
     command: mas install {{ item.id }}
     loop:

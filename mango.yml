@@ -48,9 +48,3 @@
       name: stacks
   - include_role:
       name: rome2stack
-  - include_role:
-      name: ohmyzsh
-    vars:
-      plugins:
-       - docker
-       - docker-compose

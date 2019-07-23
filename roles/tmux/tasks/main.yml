@@ -10,4 +10,4 @@
   lineinfile:
     path: "{{ lookup('env','HOME') }}/.tmux.conf"
     create: yes
-    line: set-option -g default-command "reattach-to-user-namespace -l zsh"
+    line: set-option -g default-command "reattach-to-user-namespace -l bash"

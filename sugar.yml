@@ -12,6 +12,7 @@
     loop:
       - firefox
       - google-chrome
+      - onedrive
       - postman
       - ringcentral
       - ringcentral-meetings

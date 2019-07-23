@@ -44,8 +44,8 @@ ansible-playbook -K me.yml
 ## wrap up
 
 ```shell
-# Replace the current shell with zsh so you don't have to restart the terminal.
-env zsh -l
+# Replace the current shell so you don't have to restart the terminal.
+env bash -l
 ```
 
 ```shell
@@ -64,17 +64,3 @@ Follow suggestions by Homebrew.
 ## more machines
 
 [sugar](SUGAR.md)
-
-## modern.ie
-
-It is a goal to create a role for modern.ie. Unfortunately, I haven't had any success automating it. Until then, manually run the following commands to install [IE 11 and Edge VMs](https://xdissent.github.io/ievms/). Install VirtualBox before proceeding.
-
-```shell
-curl -fsSL https://raw.githubusercontent.com/xdissent/ievms/master/ievms.sh | env IEVMS_VERSIONS="11 EDGE" bash
-
-VBoxManage extpack install $HOME/.ievms/Oracle_VM_VirtualBox_Extension_Pack-*
-
-curl -fsSL https://raw.githubusercontent.com/xdissent/ievms/master/ievms.sh | env IEVMS_VERSIONS="11 EDGE" bash
-```
-
-Or just [download the VMs](https://developer.microsoft.com/en-us/microsoft-edge/tools/vms/) from modern.ie.

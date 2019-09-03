@@ -27,7 +27,7 @@
   - include_role:
       name: bazel
     vars:
-      bazel_version: "0.25.3"
+      bazel_version: "0.28.1"
   - include_role:
       name: scloud
   - include_role:

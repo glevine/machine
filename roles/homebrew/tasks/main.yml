@@ -10,8 +10,7 @@
   homebrew:
     update_homebrew: yes
 - name: upgrade formula
-  homebrew:
-    upgrade_all: yes
+  command: brew upgrade --ignore-pinned
 - name: upgrade casks
   homebrew_cask:
     greedy: yes

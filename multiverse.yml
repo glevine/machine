@@ -27,7 +27,7 @@
   - include_role:
       name: bazel
     vars:
-      bazel_version: "0.28.1"
+      formula: https://raw.githubusercontent.com/bazelbuild/homebrew-tap/9e0259483c8dc5246930c4b0b57a3344a22663bc/Formula/bazel.rb
   - include_role:
       name: scloud
   - include_role:

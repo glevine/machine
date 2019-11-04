@@ -1,20 +1,7 @@
 ---
-- name: exists?
-  shell: brew ls --versions bazel >/dev/null 2>&1
-  register: bazel
-  ignore_errors: yes
 - name: tap
   homebrew_tap:
     name: bazelbuild/tap
-- name: unpin
-  command: brew unpin bazel
-  when: bazel.rc == 0
 - name: install
   homebrew:
-    name: "{{ formula }}"
-  when: bazel.rc != 0
-- name: upgrade
-  command: brew upgrade {{ formula }}
-  when: bazel.rc == 0
-- name: pin
-  command: brew pin bazel
+    name: bazelbuild/tap/bazel

@@ -1,9 +1,8 @@
 ---
 - name: install
-  homebrew_cask:
-    name: minikube
-    accept_external_apps: yes
-# hyperkit is already installed by Docker Desktop for Mac.
+  shell: curl -Lo minikube https://storage.googleapis.com/minikube/releases/v1.3.1/minikube-darwin-amd64 && chmod +x minikube && sudo cp minikube /usr/local/bin/ && rm minikube
+  become: true
+# hyperkit is already installed by Docker Desktop for Mac but minikube needs the driver to be installed separately until v1.4.
 - name: docker-machine-driver-hyperkit
   shell: curl -LO https://storage.googleapis.com/minikube/releases/latest/docker-machine-driver-hyperkit && sudo install -o root -g wheel -m 4755 docker-machine-driver-hyperkit /usr/local/bin/
   become: true

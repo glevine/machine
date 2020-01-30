@@ -1,0 +1,18 @@
+---
+- name: exists?
+  shell: command -v bash
+  register: bash
+  ignore_errors: yes
+- name: install
+  homebrew:
+    name: bash
+    update_homebrew: yes
+  when: bash.stdout != "/usr/local/bin/bash"
+- name: default shell
+  shell: dscl . -create "/Users/$USER" UserShell /usr/local/bin/bash
+  become: true
+- name: source .machine
+  lineinfile:
+    path: "{{ lookup('env','HOME') }}/.bash_profile"
+    create: yes
+    line: source $HOME/.machine

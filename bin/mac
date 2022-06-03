@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -u
+
+abort() {
+    printf "%s\n" "$@" >&2
+    exit 1
+}
+
+MACHINE_REPO="https://github.com/glevine/machine.git"
+MACHINE_HOME=$HOME/.machine
+
+if ! command -v git &>/dev/null; then
+    abort "git is not installed"
+fi
+
+# Install it.
+if [ ! -d "$MACHINE_HOME" ]; then
+    git clone --recurse-submodules --remote-submodules $MACHINE_REPO $MACHINE_HOME
+fi
+
+# Make it.
+if [ -d "$MACHINE_HOME" ]; then
+    (
+        cd $MACHINE_HOME
+        make
+    )
+else
+    abort "machine is not installed"
+fi
+
+# Replace the current shell with zsh.
+# source: https://github.com/ohmyzsh/ohmyzsh/commit/73f29087f99e2e6630dcc5954db1240e8c885147
+# note: Can't do this inside the Makefile since it would be run in a separate shell.
+exec zsh -l

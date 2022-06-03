@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-# source: https://github.com/sugarcrm/devops/wiki/Useful-Git-Hooks
-git submodule update

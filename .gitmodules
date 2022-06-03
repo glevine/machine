@@ -1,0 +1,3 @@
+[submodule "mac-dev-playbook"]
+	path = mac-dev-playbook
+	url = https://github.com/glevine/mac-dev-playbook

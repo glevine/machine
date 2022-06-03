@@ -1,5 +1,0 @@
----
-dependencies:
-  - role: git
-  - role: vagrant
-# Also depends on VirtualBox.

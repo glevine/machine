@@ -1,6 +1,0 @@
----
-dependencies:
-  - role: git
-  - role: composer
-  # PHP is used by some Mango git hooks.
-  - role: php

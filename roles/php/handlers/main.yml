@@ -1,2 +1,0 @@
-- name: start php
-  shell: brew services restart php

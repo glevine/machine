@@ -1,7 +1,0 @@
----
-- name: tap
-  homebrew_tap:
-    name: bazelbuild/tap
-- name: install
-  homebrew:
-    name: bazelbuild/tap/bazel

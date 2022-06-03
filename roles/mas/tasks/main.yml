@@ -1,4 +1,0 @@
----
-- name: install
-  homebrew:
-    name: mas

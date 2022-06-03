@@ -1,8 +1,0 @@
----
-- name: install
-  get_url:
-    url: http://jenkins.multiverse.sugarcrm.io/job/sugarcrm/job/multiverse/job/master/lastSuccessfulBuild/artifact/artifacts/bin/scloud-darwin-amd64
-    dest: /usr/local/bin/scloud
-    mode: 0755
-- name: k8s client config setup (kubectl)
-  command: /usr/local/bin/scloud kubeconfig setup

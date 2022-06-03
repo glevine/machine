@@ -11,7 +11,7 @@ This is a launcher for [glevine/mac-dev-playbook](https://github.com/glevine/mac
 ## build it
 
 ```shell
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/glevine/machine/HEAD/bin/machine)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/glevine/machine/HEAD/bin/mac)"
 ```
 
 ## update it

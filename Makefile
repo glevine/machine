@@ -44,10 +44,10 @@ build: ansible
 	if ! command -v omz &> /dev/null; then sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended; else omz update --unattended; fi
 
 	# Install playbook dependencies.
-	cd mac-dev-playbook; ansible-galaxy install -r requirements.yml
+	cd mac-dev-playbook; $(python3 -m site --user-site)/ansible-galaxy install -r requirements.yml
 
 	# Execute the playbook.
-	cd mac-dev-playbook; ansible-playbook main.yml -i inventory --ask-become-pass
+	cd mac-dev-playbook; $(python3 -m site --user-site)/ansible-playbook main.yml -i inventory --ask-become-pass
 
 	# Install useful key bindings and fuzzy completion for fzf.
 	if command -v brew &> /dev/null; then $(brew --prefix)/opt/fzf/install; fi

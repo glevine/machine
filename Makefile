@@ -1,4 +1,4 @@
-SHELL := /bin/bash
+SHELL := /bin/zsh
 
 .DEFAULT_GOAL := all
 .DELETE_ON_ERROR:
@@ -41,16 +41,16 @@ build: ansible
 	if command -v brew &> /dev/null; then brew update; brew upgrade --ignore-pinned; fi
 
 	# Install oh-my-zsh.
-	if ! command -v omz &> /dev/null; then sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended; else omz update --unattended; fi
+	if [[ -z "$$ZSH" ]]; then sh -c "$$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended; else ZSH="$$ZSH" command zsh -f "$$ZSH/tools/upgrade.sh"; fi
 
 	# Install playbook dependencies.
-	cd mac-dev-playbook; $(python3 -m site --user-site)/ansible-galaxy install -r requirements.yml
+	cd mac-dev-playbook; $$(python3 -m site --user-base)/bin/ansible-galaxy install -r requirements.yml
 
 	# Execute the playbook.
-	cd mac-dev-playbook; $(python3 -m site --user-site)/ansible-playbook main.yml -i inventory --ask-become-pass
+	cd mac-dev-playbook; $$(python3 -m site --user-base)/bin/ansible-playbook main.yml -i inventory --ask-become-pass
 
 	# Install useful key bindings and fuzzy completion for fzf.
-	if command -v brew &> /dev/null; then $(brew --prefix)/opt/fzf/install; fi
+	if command -v brew &> /dev/null; then $$(brew --prefix)/opt/fzf/install; fi
 
 	# TODO: make sure the ssh-agent is running, if you can
 

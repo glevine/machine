@@ -26,7 +26,7 @@ mac
 
 ```shell
 # Copy your SSH key to your clipboard.
-pbcopy <"$HOME/.ssh/id_rsa.pub"
+pbcopy < "$HOME/.ssh/id_ed25519.pub"
 ```
 
 [Add your SSH key](https://github.com/settings/ssh/new) to Github.

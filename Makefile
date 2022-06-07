@@ -57,4 +57,11 @@ build: ansible
 .PHONY: clean
 clean:
 	# Follow suggestions by Homebrew.
-	brew doctor
+	brew doctor || true
+
+	# Replace the current shell with zsh.
+	# source: https://github.com/ohmyzsh/ohmyzsh/commit/73f29087f99e2e6630dcc5954db1240e8c885147
+	exec zsh -l
+	which zsh
+	zsh --version
+

@@ -29,7 +29,3 @@ else
     abort "machine is not installed"
 fi
 
-# Replace the current shell with zsh.
-# source: https://github.com/ohmyzsh/ohmyzsh/commit/73f29087f99e2e6630dcc5954db1240e8c885147
-# note: Can't do this inside the Makefile since it would be run in a separate shell.
-exec zsh -l

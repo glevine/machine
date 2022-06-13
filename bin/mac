@@ -25,7 +25,8 @@ if [ -d "$MACHINE_HOME" ]; then
         cd $MACHINE_HOME
         make
     )
+
+    echo "a reboot is recommended"
 else
     abort "machine is not installed"
 fi
-

@@ -21,12 +21,21 @@ fi
 
 # Make it.
 if [ -d "$MACHINE_HOME" ]; then
-    (
-        cd $MACHINE_HOME
-        make
-    )
+    if [ $# -eq 0 ]; then
+        # Make the machine.
+        (
+            cd $MACHINE_HOME
+            make
+        )
 
-    echo "a reboot is recommended"
+        echo "a reboot is recommended"
+    else
+        # Make a specific target.
+        (
+            cd $MACHINE_HOME
+            make "$@"
+        )
+    fi
 else
     abort "machine is not installed"
 fi

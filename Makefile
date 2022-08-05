@@ -4,6 +4,7 @@ SHELL := /bin/zsh
 .DELETE_ON_ERROR:
 
 MACHINE_HOME := $(HOME)/.machine
+GITHUB_USERNAME := glevine
 
 .PHONY: all
 all: machine clean
@@ -67,21 +68,19 @@ clean:
 
 .PHONY: multiverse
 multiverse: MULTIVERSE_HOME := $(HOME)/github.com/sugarcrm/multiverse
-multiverse: GIT_UPSTREAM := git@github.com:sugarcrm/multiverse.git
-multiverse: GIT_ORIGIN := git@github.com:glevine/multiverse.git
 multiverse: EMAIL := $$(whoami)@sugarcrm.com
 multiverse:
 	# Clone multiverse.
-	if [[ ! -d $(MULTIVERSE_HOME) ]]; then git clone --recurse-submodules --remote-submodules -o upstream $(GIT_UPSTREAM) $(MULTIVERSE_HOME); fi
+	if [[ ! -d $(MULTIVERSE_HOME) ]]; then git clone --recurse-submodules --remote-submodules -o upstream git@github.com:sugarcrm/multiverse.git $(MULTIVERSE_HOME); fi
 
 	# Install any submodules.
 	git -C $(MULTIVERSE_HOME) submodule update --init --recursive --remote --rebase
 
 	# Add fork as origin.
-	if ! git -C $(MULTIVERSE_HOME) remote | grep -q "^origin$$"; then git -C $(MULTIVERSE_HOME) remote add origin $(GIT_ORIGIN); fi
+	if ! git -C $(MULTIVERSE_HOME) remote | grep -q "^origin$$"; then git -C $(MULTIVERSE_HOME) remote add origin git@github.com:$(GITHUB_USERNAME)/multiverse.git; fi
 
 	# Install bazelisk.
-	if ! command -v bazelisk &>/dev/null; then brew install bazelisk; else brew upgrade bazelisk; fi
+	if ! command -v bazelisk &> /dev/null; then brew install bazelisk; else brew upgrade bazelisk; fi
 
 	# rules_docker requires python2. python2 is not present on macOS 12. As a workaround until multiverse uses rules_docker-0.24.0, the following installs python2 and prioritizes python3 globally. Once python2 is no longer necessary, unset it with:
 	# pyenv global system; pyenv uninstall 3.10.6; pyenv uninstall 2.7.18;
@@ -96,11 +95,11 @@ multiverse:
 	cd $(MULTIVERSE_HOME); make go-link-stubs; make go-mod
 
 	# Install scloud.
-	if ! command -v scloud &>/dev/null; then wget -q --show-progress -O $(MULTIVERSE_HOME)/bin/scloud https://jenkins.service.sugarcrm.com/job/multiverse/job/monorepo/job/master/1244/artifact/artifacts/bin/scloud-darwin-amd64; chmod +x $(MULTIVERSE_HOME)/bin/scloud; fi
+	if ! command -v scloud &> /dev/null; then wget -q --show-progress -O $(MULTIVERSE_HOME)/bin/scloud https://jenkins.service.sugarcrm.com/job/multiverse/job/monorepo/job/master/1244/artifact/artifacts/bin/scloud-darwin-amd64; chmod +x $(MULTIVERSE_HOME)/bin/scloud; fi
 
 	# scloud can't be updated until https://sugarcrm.atlassian.net/browse/IDM-2719 is fixed.
 	# Once fixed, replace the above command with:
-	# if ! command -v scloud &>/dev/null; then wget -q --show-progress -O $(MULTIVERSE_HOME)/bin/scloud https://jenkins.service.sugarcrm.com/job/multiverse/job/monorepo/job/master/lastSuccessfulBuild/artifact/artifacts/bin/scloud-darwin-amd64; chmod +x $(MULTIVERSE_HOME)/bin/scloud; else scloud update; fi
+	# if ! command -v scloud &> /dev/null; then wget -q --show-progress -O $(MULTIVERSE_HOME)/bin/scloud https://jenkins.service.sugarcrm.com/job/multiverse/job/monorepo/job/master/lastSuccessfulBuild/artifact/artifacts/bin/scloud-darwin-amd64; chmod +x $(MULTIVERSE_HOME)/bin/scloud; else scloud update; fi
 
 	# Show scloud version.
 	scloud version
@@ -110,8 +109,177 @@ multiverse:
 
 	# Log into quay.io.
 	# Note: Generate encrypted Docker CLI password at https://quay.io/user/$$(whoami)?tab=settings.
-	if ! grep -q quay.io $(HOME)/.docker/config.json; then IFS= read -rs 'password?quay.io password: ' </dev/tty && printf '%s' "$${password}" | docker login -u="$$(whoami)" --password-stdin quay.io; fi
+	if ! grep -q quay.io $(HOME)/.docker/config.json; then IFS= read -rs 'password?quay.io password: ' </dev/tty && printf '%s' "$$(password)" | docker login -u="$$(whoami)" --password-stdin quay.io; fi
 
 	# Configure AWS CLI for use with sugararch account.
 	# Note: Create access key as described at https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html. Or, copy an access key from ~/.aws/credentials and transfer it to another machine to use an existing access key.
 	if ! grep -q $(EMAIL) $(HOME)/.aws/config || ! grep -q $(EMAIL) $(HOME)/.aws/credentials; then aws configure --profile $(EMAIL); fi
+
+define CADENCE_IDE_WORKSPACE_SETTINGS
+{
+	"python.pythonPath": "$${env:HOME}/.pyenv/versions/$(PYTHON_VERSION)/envs/sugarconnect@$(PYTHON_VERSION)/bin/python"
+}
+endef
+export CADENCE_IDE_WORKSPACE_SETTINGS
+define CADENCE_IDE_DEBUG_SETTINGS
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Webserver",
+            "type": "python",
+            "request": "launch",
+            "justMyCode": false,
+            "program": "$${workspaceFolder}/backend/main/src/manage.py",
+            "console": "integratedTerminal",
+            "args": [
+                "runsslserver",
+                "0.0.0.0:28081",
+                "--noreload",
+                "--nothreading"
+            ],
+            "env": {
+                "DJANGO_SETTINGS_MODULE": "config.settings.debug"
+            },
+            "django": true
+        },
+        {
+            "name": "Celery Worker",
+            "type": "python",
+            "request": "launch",
+            "program": "$${env:HOME}/.pyenv/versions/$(PYTHON_VERSION)/envs/sugarconnect@$(PYTHON_VERSION)/bin/celery",
+            "console": "integratedTerminal",
+            "cwd": "$${workspaceFolder}/backend/main/src",
+            "args": [
+                "--app=config.celery:app",
+                "worker",
+                "--loglevel=DEBUG",
+                "-O",
+                "fair",
+                "-P",
+                "solo"
+            ],
+            "env": {
+                "DJANGO_SETTINGS_MODULE": "config.settings.debug"
+            }
+        },
+        {
+            "name": "Refresh SA Tokens",
+            "type": "python",
+            "request": "launch",
+            "justMyCode": false,
+            "program": "$${workspaceFolder}/backend/main/src/manage.py",
+            "console": "integratedTerminal",
+            "args": [
+                "refresh_sa_tokens"
+            ],
+            "env": {
+                "DJANGO_SETTINGS_MODULE": "config.settings.debug"
+            },
+            "django": true
+        },
+        {
+            "name": "Shell Plus",
+            "type": "python",
+            "request": "launch",
+            "justMyCode": false,
+            "program": "$${workspaceFolder}/backend/main/src/manage.py",
+            "console": "integratedTerminal",
+            "args": [
+                "shell_plus",
+                "--ipython"
+            ],
+            "env": {
+                "DJANGO_SETTINGS_MODULE": "config.settings.debug"
+            },
+            "django": true
+        },
+        {
+            "name": "Integration Tests",
+            "type": "python",
+            "request": "launch",
+            "justMyCode": false,
+			"cwd": "$${workspaceFolder}",
+            "program": "pytest",
+            "console": "integratedTerminal",
+            "args": [
+            ],
+            "env": {
+                "DJANGO_SETTINGS_MODULE": "config.settings.debug"
+            },
+            "django": true
+        }
+    ]
+}
+endef
+export CADENCE_IDE_DEBUG_SETTINGS
+.PHONY: sugarconnect
+sugarconnect: CADENCE_HOME := $(HOME)/github.com/sugarcrm/collabspot-cadence
+sugarconnect: PYTHON_VERSION := 3.9.10
+sugarconnect: NODEJS_VERSION := 12
+sugarconnect:
+	# Clone collabspot-cadence.
+	if [[ ! -d $(CADENCE_HOME) ]]; then git clone --recurse-submodules --remote-submodules -o upstream git@github.com:sugarcrm/collabspot-cadence.git $(CADENCE_HOME); fi
+
+	# Install any submodules.
+	git -C $(CADENCE_HOME) submodule update --init --recursive --remote --rebase
+
+	# Add fork as origin.
+	if ! git -C $(CADENCE_HOME) remote | grep -q "^origin$$"; then git -C $(CADENCE_HOME) remote add origin git@github.com:$(GITHUB_USERNAME)/collabspot-cadence.git; fi
+
+	# PostgreSQL is needed to compile psycopg. The database is actually run in Docker.
+	if ! command -v postgres &> /dev/null; then brew install postgresql; else brew upgrade postgresql; fi
+
+	# An empty access key satisfies the requirements.
+	# The secret will be loaded from SUGAR_OAUTH_SA_CLIENT_SECRETS in custom_local.py.
+	touch $(CADENCE_HOME)/backend/main/src/resources/local/sugar_connect_sa_secret
+
+	# Add settings to custom_local.py.
+	touch $(CADENCE_HOME)/backend/main/src/config/settings/custom_local.py
+	if ! grep -Fxq "PUBLIC_TENANT_BASE_URL = 'clbspot.localhost.com:28081'" $(CADENCE_HOME)/backend/main/src/config/settings/custom_local.py; then echo "PUBLIC_TENANT_BASE_URL = 'clbspot.localhost.com:28081'" >> $(CADENCE_HOME)/backend/main/src/config/settings/custom_local.py; fi
+	if ! grep -Fxq "PUBLIC_TENANT_BASE_URL_FULL = 'https://' + PUBLIC_TENANT_BASE_URL" $(CADENCE_HOME)/backend/main/src/config/settings/custom_local.py; then echo "PUBLIC_TENANT_BASE_URL_FULL = 'https://' + PUBLIC_TENANT_BASE_URL" >> $(CADENCE_HOME)/backend/main/src/config/settings/custom_local.py; fi
+	if ! grep -Fxq "SESSION_COOKIE_DOMAIN = '.clbspot.localhost.com'" $(CADENCE_HOME)/backend/main/src/config/settings/custom_local.py; then echo "SESSION_COOKIE_DOMAIN = '.clbspot.localhost.com'" >> $(CADENCE_HOME)/backend/main/src/config/settings/custom_local.py; fi
+	if ! grep -Fxq "HTTP_SCHEME = 'https'" $(CADENCE_HOME)/backend/main/src/config/settings/custom_local.py; then echo "HTTP_SCHEME = 'https'" >> $(CADENCE_HOME)/backend/main/src/config/settings/custom_local.py; fi
+	if ! grep -Fxq "SUGAR_OAUTH_STS_SERVER = 'https://sts-stage.service.sugarcrm.com'" $(CADENCE_HOME)/backend/main/src/config/settings/custom_local.py; then echo "SUGAR_OAUTH_STS_SERVER = 'https://sts-stage.service.sugarcrm.com'" >> $(CADENCE_HOME)/backend/main/src/config/settings/custom_local.py; fi
+
+	# Some settings must be added to $(CADENCE_HOME)/backend/main/src/config/settings/custom_local.py manually.
+	# 	- SUGAR_OAUTH_CLIENT_ID
+	# 	- SUGAR_OAUTH_SA_CLIENTS
+	# 	- SUGAR_OAUTH_SA_CLIENT_SECRETS
+
+	# Install Python.
+	pyenv install -s $(PYTHON_VERSION)
+
+	# Create a virtual environment.
+	pyenv virtualenv -f $(PYTHON_VERSION) sugarconnect@$(PYTHON_VERSION)
+	if ! grep -Fxq "export DJANGO_SETTINGS_MODULE=config.settings.debug" $(HOME)/.pyenv/versions/$(PYTHON_VERSION)/envs/sugarconnect@$(PYTHON_VERSION)/bin/activate; then echo "export DJANGO_SETTINGS_MODULE=config.settings.debug" >> $(HOME)/.pyenv/versions/$(PYTHON_VERSION)/envs/sugarconnect@$(PYTHON_VERSION)/bin/activate; fi
+
+	# Enable automatic virtual environment activation.
+	cd $(CADENCE_HOME); pyenv local sugarconnect@$(PYTHON_VERSION)
+
+	# Install Python dependencies.
+	cd $(CADENCE_HOME)/backend/main; python -m pip install --upgrade pip-tools; pip-compile requirements.in; pip-compile test-requirements.in; pip-compile dev-requirements.in; GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1 GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1 pip-sync requirements.txt test-requirements.txt dev-requirements.txt
+
+	# Install Node.js.
+	volta install node@$(NODEJS_VERSION)
+
+	# Install the latest npm.
+	volta install npm
+
+	# Configure Visual Studio Code.
+	mkdir -p $(CADENCE_HOME)/.vscode
+	echo "$$CADENCE_IDE_WORKSPACE_SETTINGS" > $(CADENCE_HOME)/.vscode/settings.json
+	echo "$$CADENCE_IDE_DEBUG_SETTINGS" > $(CADENCE_HOME)/.vscode/launch.json
+
+	# Add local hosts.
+	if ! grep -Fxq "127.0.0.1 clbspot.localhost.com" /etc/hosts; then sudo -- sh -c "echo 127.0.0.1 clbspot.localhost.com >> /etc/hosts"; fi
+	if ! grep -Fxq "127.0.0.1 sugarcrm.clbspot.localhost.com" /etc/hosts; then sudo -- sh -c "echo 127.0.0.1 sugarcrm.clbspot.localhost.com >> /etc/hosts"; fi
+
+	# Build the application.
+	cd $(CADENCE_HOME); make scratch
+
+	# Link the portal.
+	ln -sf $(CADENCE_HOME)/sugar-connect-portal/dist/sugar-connect-portal $(CADENCE_HOME)/backend/main/src/static/app
+
+	# Connect the service account.
+	cd $(CADENCE_HOME)/backend/main/src; python manage.py refresh_sa_tokens --settings=config.settings.debug

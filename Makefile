@@ -69,6 +69,7 @@ clean:
 .PHONY: multiverse
 multiverse: MULTIVERSE_HOME := $(HOME)/github.com/sugarcrm/multiverse
 multiverse: EMAIL := $$(whoami)@sugarcrm.com
+multiverse: SKAFFOLD_HOME := $$(go env GOPATH)/src/github.com/GoogleContainerTools/skaffold
 multiverse:
 	# Clone multiverse.
 	if [[ ! -d $(MULTIVERSE_HOME) ]]; then git clone --recurse-submodules --remote-submodules -o upstream git@github.com:sugarcrm/multiverse.git $(MULTIVERSE_HOME); fi
@@ -114,6 +115,14 @@ multiverse:
 	# Configure AWS CLI for use with sugararch account.
 	# Note: Create access key as described at https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html. Or, copy an access key from ~/.aws/credentials and transfer it to another machine to use an existing access key.
 	if ! grep -q $(EMAIL) $(HOME)/.aws/config || ! grep -q $(EMAIL) $(HOME)/.aws/credentials; then aws configure --profile $(EMAIL); fi
+
+	# Build and link skaffold v0.21.1.
+	if [[ ! -d $(SKAFFOLD_HOME) ]]; then git clone -o upstream git@github.com:GoogleContainerTools/skaffold.git $(SKAFFOLD_HOME); fi
+	git -C $(SKAFFOLD_HOME) fetch --all --tags
+	git -C $(SKAFFOLD_HOME) checkout tags/v0.21.1
+	if ! command -v dep &> /dev/null; then brew install dep; else brew upgrade dep; fi
+	if [[ ! -f $(SKAFFOLD_HOME)/out/skaffold@0.21.1 ]]; then cd $(SKAFFOLD_HOME); dep ensure; GO111MODULE=off make; mv $(SKAFFOLD_HOME)/out/skaffold $(SKAFFOLD_HOME)/out/skaffold@0.21.1; fi
+	ln -sf $(SKAFFOLD_HOME)/out/skaffold@0.21.1 $(MULTIVERSE_HOME)/tools/bin/darwin/skaffold
 
 define CADENCE_IDE_WORKSPACE_SETTINGS
 {

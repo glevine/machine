@@ -30,3 +30,15 @@ pbcopy < "$HOME/.ssh/id_ed25519.pub"
 ```
 
 [Add your SSH key](https://github.com/settings/ssh/new) to Github.
+
+## install multiverse
+
+```shell
+mac multiverse
+```
+
+## install sugar connect
+
+```shell
+mac sugarconnect
+```

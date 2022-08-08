@@ -20,6 +20,9 @@ The following assumes that `$HOME/.machine/bin` is in the PATH.
 
 ```shell
 mac
+
+Would you like make all targets? [y/n]
+# Choose "y" to install the machine and additional tools. Choose "n" to only make the machine.
 ```
 
 ## wrap up
@@ -31,14 +34,18 @@ pbcopy < "$HOME/.ssh/id_ed25519.pub"
 
 [Add your SSH key](https://github.com/settings/ssh/new) to Github.
 
-## install multiverse
+## additional installations
 
 ```shell
+# install it all
+mac all
+
+# install multiverse
 mac multiverse
-```
 
-## install sugar connect
-
-```shell
+# install sugarconnect
 mac sugarconnect
+
+# make multiple targets
+mac multiverse sugarconnect
 ```

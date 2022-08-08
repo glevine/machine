@@ -1,13 +1,16 @@
 SHELL := /bin/zsh
 
-.DEFAULT_GOAL := all
+.DEFAULT_GOAL := default
 .DELETE_ON_ERROR:
 
 MACHINE_HOME := $(HOME)/.machine
 GITHUB_USERNAME := glevine
 
+.PHONY: default
+default: machine clean
+
 .PHONY: all
-all: machine clean
+all: machine multiverse sugarconnect clean
 
 .PHONY: deps
 deps:

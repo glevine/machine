@@ -23,10 +23,19 @@ fi
 if [ -d "$MACHINE_HOME" ]; then
     if [ $# -eq 0 ]; then
         # Make the machine.
-        (
-            cd $MACHINE_HOME
-            make
-        )
+        read -p "Would you like make all targets? [y/n] " make_all
+
+        if [ $make_all == "y" ] || [ $make_all == "Y" ]; then
+            (
+                cd $MACHINE_HOME
+                make all
+            )
+        else
+            (
+                cd $MACHINE_HOME
+                make
+            )
+        fi
 
         echo "A reboot is recommended."
     else

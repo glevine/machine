@@ -28,7 +28,7 @@ if [ -d "$MACHINE_HOME" ]; then
             make
         )
 
-        echo "a reboot is recommended"
+        echo "A reboot is recommended."
     else
         # Make a specific target.
         (

@@ -14,7 +14,7 @@ This is a launcher for [glevine/mac-dev-playbook](https://github.com/glevine/mac
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/glevine/machine/HEAD/bin/mac)"
 ```
 
-> **Would you like make all targets? [y/n]**
+> **Would you like to make all targets? [y/n]**
 >
 > Choose `y` to install the machine and additional tools. Choose `n` to only make the machine.
 

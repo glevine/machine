@@ -23,7 +23,7 @@ fi
 if [ -d "$MACHINE_HOME" ]; then
     if [ $# -eq 0 ]; then
         # Make the machine.
-        read -p "Would you like make all targets? [y/n] " make_all
+        read -p "Would you like to make all targets? [y/n] " make_all
 
         if [ $make_all == "y" ] || [ $make_all == "Y" ]; then
             (

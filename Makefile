@@ -96,14 +96,7 @@ multiverse:
 	cd $(MULTIVERSE_HOME); make go-link-stubs; make go-mod
 
 	# Install scloud.
-	if ! command -v scloud &> /dev/null; then wget -q --show-progress -O $(MULTIVERSE_HOME)/bin/scloud https://jenkins.service.sugarcrm.com/job/multiverse/job/monorepo/job/master/1244/artifact/artifacts/bin/scloud-darwin-amd64; chmod +x $(MULTIVERSE_HOME)/bin/scloud; fi
-
-	# scloud can't be updated until https://sugarcrm.atlassian.net/browse/IDM-2719 is fixed.
-	# Once fixed, replace the above command with:
-	# if ! command -v scloud &> /dev/null; then wget -q --show-progress -O $(MULTIVERSE_HOME)/bin/scloud https://jenkins.service.sugarcrm.com/job/multiverse/job/monorepo/job/master/lastSuccessfulBuild/artifact/artifacts/bin/scloud-darwin-amd64; chmod +x $(MULTIVERSE_HOME)/bin/scloud; else scloud update; fi
-
-	# Show scloud version.
-	scloud version
+	if ! command -v scloud &> /dev/null; then wget -q --show-progress -O $(MULTIVERSE_HOME)/bin/scloud https://jenkins.service.sugarcrm.com/job/multiverse/job/monorepo/job/master/lastSuccessfulBuild/artifact/artifacts/bin/scloud-darwin-amd64; chmod +x $(MULTIVERSE_HOME)/bin/scloud; else scloud update; fi
 
 	# Log into kubernetes clusters.
 	if [[ $$(kubectl config view | grep -q "contexts: null")$$? -eq 0 ]]; then scloud kubeconfig setup; else; scloud kubeconfig sync --email $(EMAIL); fi

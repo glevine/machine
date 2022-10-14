@@ -72,7 +72,6 @@ clean:
 .PHONY: multiverse
 multiverse: MULTIVERSE_HOME := $(HOME)/github.com/sugarcrm/multiverse
 multiverse: EMAIL := $$(whoami)@sugarcrm.com
-multiverse: SKAFFOLD_HOME := $$(go env GOPATH)/src/github.com/GoogleContainerTools/skaffold
 multiverse:
 	# Clone multiverse.
 	if [[ ! -d $(MULTIVERSE_HOME) ]]; then git clone --recurse-submodules --remote-submodules -o upstream git@github.com:sugarcrm/multiverse.git $(MULTIVERSE_HOME); fi
@@ -85,12 +84,6 @@ multiverse:
 
 	# Install bazelisk.
 	if ! command -v bazelisk &> /dev/null; then brew install bazelisk; else brew upgrade bazelisk; fi
-
-	# rules_docker requires python2. python2 is not present on macOS 12. As a workaround until multiverse uses rules_docker-0.24.0, the following installs python2 and prioritizes python3 globally. Once python2 is no longer necessary, unset it with:
-	# pyenv global system; pyenv uninstall 3.10.6; pyenv uninstall 2.7.18;
-	pyenv install -s 3.10.6
-	pyenv install -s 2.7.18
-	pyenv global 3.10.6 2.7.18
 
 	# Test bazel installation.
 	cd $(MULTIVERSE_HOME); bazel info; make diagnostics
@@ -112,13 +105,10 @@ multiverse:
 	# Note: Create access key as described at https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html. Or, copy an access key from ~/.aws/credentials and transfer it to another machine to use an existing access key.
 	if ! grep -q $(EMAIL) $(HOME)/.aws/config || ! grep -q $(EMAIL) $(HOME)/.aws/credentials; then aws configure --profile $(EMAIL); fi
 
-	# Build and link skaffold v0.21.1.
-	if [[ ! -d $(SKAFFOLD_HOME) ]]; then git clone -o upstream git@github.com:GoogleContainerTools/skaffold.git $(SKAFFOLD_HOME); fi
-	git -C $(SKAFFOLD_HOME) fetch --all --tags
-	git -C $(SKAFFOLD_HOME) checkout tags/v0.21.1
-	if ! command -v dep &> /dev/null; then brew install dep; else brew upgrade dep; fi
-	if [[ ! -f $(SKAFFOLD_HOME)/out/skaffold@0.21.1 ]]; then cd $(SKAFFOLD_HOME); dep ensure; GO111MODULE=off make; mv $(SKAFFOLD_HOME)/out/skaffold $(SKAFFOLD_HOME)/out/skaffold@0.21.1; fi
-	ln -sf $(SKAFFOLD_HOME)/out/skaffold@0.21.1 $(MULTIVERSE_HOME)/tools/bin/darwin/skaffold
+	# Configure skaffold.
+	skaffold config set -g update-check false
+	skaffold config set -g --survey disable-prompt true
+	skaffold config set -g collect-metrics false
 
 define CADENCE_IDE_WORKSPACE_SETTINGS
 {
@@ -263,7 +253,7 @@ sugarconnect:
 	cd $(CADENCE_HOME); pyenv local sugarconnect@$(PYTHON_VERSION)
 
 	# Install Python dependencies.
-	cd $(CADENCE_HOME)/backend/main; python -m pip install --upgrade pip-tools; pip-compile requirements.in; pip-compile test-requirements.in; pip-compile dev-requirements.in; GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1 GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1 pip-sync requirements.txt test-requirements.txt dev-requirements.txt
+	cd $(CADENCE_HOME)/backend/main; python -m pip install --upgrade pip-tools; pip-compile requirements.in; pip-compile requirements-test.in; pip-compile requirements-dev.in; GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1 GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1 pip-sync requirements.txt requirements-test.txt requirements-dev.txt
 
 	# Install Node.js.
 	volta install node@$(NODEJS_VERSION)

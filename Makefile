@@ -86,7 +86,7 @@ multiverse:
 	if ! command -v bazelisk &> /dev/null; then brew install bazelisk; else brew upgrade bazelisk; fi
 
 	# Test bazel installation.
-	cd $(MULTIVERSE_HOME); bazel info; make diagnostics
+	cd $(MULTIVERSE_HOME); bazel info; ./build/make-rules/diagnostics.sh
 
 	# Build multiverse.
 	cd $(MULTIVERSE_HOME); make go-link-stubs; make go-mod

@@ -211,7 +211,7 @@ export CADENCE_IDE_DEBUG_SETTINGS
 .PHONY: sugarconnect
 sugarconnect: CADENCE_HOME := $(HOME)/github.com/sugarcrm/collabspot-cadence
 sugarconnect: PYTHON_VERSION := 3.9.10
-sugarconnect: NODEJS_VERSION := 12
+sugarconnect: NODEJS_VERSION := 14
 sugarconnect:
 	# Clone collabspot-cadence.
 	if [[ ! -d $(CADENCE_HOME) ]]; then git clone --recurse-submodules --remote-submodules -o upstream git@github.com:sugarcrm/collabspot-cadence.git $(CADENCE_HOME); fi

@@ -24,6 +24,10 @@ deps:
 	# Accept the Xcode license agreement.
 	if command -v xcodebuild &> /dev/null; then sudo xcodebuild -license accept; fi
 
+	# Install homebrew.
+	# Ansible can do this but pipx is needed to install Ansible and pipx is installed through homebrew. Let's just install Ansible with homebrew.
+	if ! command -v brew &> /dev/null; then sh -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; else brew update; fi
+
 	# Install mac-dev-playbook.
 	git -C $(MACHINE_HOME) submodule update --init --recursive --remote --rebase
 
@@ -32,26 +36,23 @@ ansible: deps
 	# Prevent the Too Many Open Files error.
 	sudo launchctl limit maxfiles unlimited
 
-	# Install pip.
-	python3 -m pip install --upgrade --user pip
-
 	# Install Ansible.
-	python3 -m pip install --upgrade --user ansible
+	if ! command -v ansible &> /dev/null; then brew install ansible; else brew upgrade ansible; fi
 
 .PHONY: machine
 machine: ansible
 	# Upgrade all homebrew packages.
-	# Ansible can do this but geerlingguy/ansible-collection-mac doesn't expose options like --ignore-pinned and --greedy.
-	if command -v brew &> /dev/null; then brew update; brew upgrade --ignore-pinned; fi
+	# Ansible can do this but geerlingguy/ansible-collection-mac doesn't expose options like --greedy.
+	if command -v brew &> /dev/null; then brew update; brew upgrade; fi
 
 	# Install oh-my-zsh.
 	if [[ -z "$$ZSH" ]]; then sh -c "$$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended; else ZSH="$$ZSH" command zsh -f "$$ZSH/tools/upgrade.sh"; fi
 
 	# Install playbook dependencies.
-	cd mac-dev-playbook; $$(python3 -m site --user-base)/bin/ansible-galaxy install -r requirements.yml
+	cd mac-dev-playbook; ansible-galaxy install -r requirements.yml
 
 	# Execute the playbook.
-	cd mac-dev-playbook; $$(python3 -m site --user-base)/bin/ansible-playbook main.yml -i inventory --ask-become-pass
+	cd mac-dev-playbook; ansible-playbook main.yml -i inventory --ask-become-pass
 
 	# Install useful key bindings and fuzzy completion for fzf.
 	if command -v brew &> /dev/null; then $$(brew --prefix)/opt/fzf/install; fi

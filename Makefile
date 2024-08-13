@@ -10,7 +10,7 @@ GITHUB_USERNAME := glevine
 default: machine clean
 
 .PHONY: all
-all: machine multiverse clean
+all: machine mango multiverse clean
 
 .PHONY: deps
 deps:
@@ -70,10 +70,23 @@ clean:
 	which zsh
 	zsh --version
 
+.PHONY: mango
+mango: MANGO_HOME := $(HOME)/github.com/sugarcrm/Mango
+mango:
+	# Clone mango.
+	if [[ ! -d $(MANGO_HOME) ]]; then git clone --recurse-submodules --remote-submodules -o upstream git@github.com:sugarcrm/Mango.git $(MANGO_HOME); fi
+
+	# Install any submodules.
+	git -C $(MANGO_HOME) submodule update --init --recursive --remote --rebase
+
+	# Add fork as origin.
+	if ! git -C $(MANGO_HOME) remote | grep -q "^origin$$"; then git -C $(MANGO_HOME) remote add origin git@github.com:$(GITHUB_USERNAME)/Mango.git; fi
+
 .PHONY: multiverse
 multiverse: MULTIVERSE_HOME := $(HOME)/github.com/sugarcrm/multiverse
 multiverse: EMAIL := $$(whoami)@sugarcrm.com
 multiverse: MULTIVERSE_TOOLS_BIN := $(MULTIVERSE_HOME)/tools/bin
+multiverse: TERRAFORM_HOME := $(HOME)/github.com/sugarcrm/ops-terraform-nosilo
 multiverse:
 	# Clone multiverse.
 	if [[ ! -d $(MULTIVERSE_HOME) ]]; then git clone --recurse-submodules --remote-submodules -o upstream git@github.com:sugarcrm/multiverse.git $(MULTIVERSE_HOME); fi
@@ -111,6 +124,15 @@ multiverse:
 	$(MULTIVERSE_TOOLS_BIN)/skaffold config set -g update-check false
 	$(MULTIVERSE_TOOLS_BIN)/skaffold config set -g --survey disable-prompt true
 	$(MULTIVERSE_TOOLS_BIN)/skaffold config set -g collect-metrics false
+
+	# Clone ops-terraform-nosilo.
+	if [[ ! -d $(TERRAFORM_HOME) ]]; then git clone --recurse-submodules --remote-submodules -o upstream git@github.com:sugarcrm/ops-terraform-nosilo.git $(TERRAFORM_HOME); fi
+
+	# Install any submodules.
+	git -C $(TERRAFORM_HOME) submodule update --init --recursive --remote --rebase
+
+	# Add fork as origin.
+	if ! git -C $(TERRAFORM_HOME) remote | grep -q "^origin$$"; then git -C $(TERRAFORM_HOME) remote add origin git@github.com:$(TERRAFORM_HOME)/ops-terraform-nosilo.git; fi
 
 define CADENCE_IDE_WORKSPACE_SETTINGS
 {

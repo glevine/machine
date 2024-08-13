@@ -10,7 +10,7 @@ GITHUB_USERNAME := glevine
 default: machine clean
 
 .PHONY: all
-all: machine multiverse sugarconnect clean
+all: machine multiverse clean
 
 .PHONY: deps
 deps:

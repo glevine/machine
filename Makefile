@@ -73,6 +73,7 @@ clean:
 .PHONY: multiverse
 multiverse: MULTIVERSE_HOME := $(HOME)/github.com/sugarcrm/multiverse
 multiverse: EMAIL := $$(whoami)@sugarcrm.com
+multiverse: MULTIVERSE_TOOLS_BIN := $(MULTIVERSE_HOME)/tools/bin
 multiverse:
 	# Clone multiverse.
 	if [[ ! -d $(MULTIVERSE_HOME) ]]; then git clone --recurse-submodules --remote-submodules -o upstream git@github.com:sugarcrm/multiverse.git $(MULTIVERSE_HOME); fi
@@ -93,23 +94,23 @@ multiverse:
 	cd $(MULTIVERSE_HOME); make go-link-stubs; make go-mod
 
 	# Install scloud.
-	if ! command -v scloud &> /dev/null; then wget -q --show-progress -O $(MULTIVERSE_HOME)/bin/scloud https://jenkins.service.sugarcrm.com/job/multiverse/job/monorepo/job/master/lastSuccessfulBuild/artifact/artifacts/bin/scloud-darwin-amd64; chmod +x $(MULTIVERSE_HOME)/bin/scloud; else scloud update; fi
+	if ! command -v scloud &> /dev/null; then wget -q --show-progress -O $(HOME)/bin/scloud https://jenkins.service.sugarcrm.com/job/multiverse/job/monorepo/job/master/lastSuccessfulBuild/artifact/artifacts/bin/scloud-darwin-amd64; chmod +x $(HOME)/bin/scloud; else scloud update; fi
 
 	# Log into kubernetes clusters.
-	if [[ $$(kubectl config view | grep -q "contexts: null")$$? -eq 0 ]]; then scloud kubeconfig setup; else; scloud kubeconfig sync --email $(EMAIL); fi
+	if [[ $$($(MULTIVERSE_TOOLS_BIN)/kubectl config view | grep -q "contexts: null")$$? -eq 0 ]]; then scloud kubeconfig setup; else; scloud kubeconfig sync --email $(EMAIL); fi
 
 	# Log into quay.io.
 	# Note: Generate encrypted Docker CLI password at https://quay.io/user/$$(whoami)?tab=settings.
-	if ! grep -q quay.io $(HOME)/.docker/config.json; then IFS= read -rs 'password?quay.io password: ' </dev/tty && printf '%s' "$$(password)" | docker login -u="$$(whoami)" --password-stdin quay.io; fi
+	if ! grep -q quay.io $(HOME)/.docker/config.json; then IFS= read -rs 'password?quay.io password: ' </dev/tty && printf '%s' "$${password}" | docker login -u="$$(whoami)" --password-stdin quay.io; fi
 
 	# Configure AWS CLI for use with sugararch account.
 	# Note: Create access key as described at https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html. Or, copy an access key from ~/.aws/credentials and transfer it to another machine to use an existing access key.
 	if ! grep -q $(EMAIL) $(HOME)/.aws/config || ! grep -q $(EMAIL) $(HOME)/.aws/credentials; then aws configure --profile $(EMAIL); fi
 
 	# Configure skaffold.
-	skaffold config set -g update-check false
-	skaffold config set -g --survey disable-prompt true
-	skaffold config set -g collect-metrics false
+	$(MULTIVERSE_TOOLS_BIN)/skaffold config set -g update-check false
+	$(MULTIVERSE_TOOLS_BIN)/skaffold config set -g --survey disable-prompt true
+	$(MULTIVERSE_TOOLS_BIN)/skaffold config set -g collect-metrics false
 
 define CADENCE_IDE_WORKSPACE_SETTINGS
 {

@@ -6,7 +6,12 @@ This is a launcher for [glevine/mac-dev-playbook](https://github.com/glevine/mac
 
 1. Sign into iCloud.
 2. Sign into the App Store.
-3. Open a terminal.
+3. Grant full disk access to Terminal.app.
+    1. Open `System Settings`.
+    2. Click `Privacy & Security`.
+    3. Click `Full Disk Access`.
+    4. Enable access for `Terminal`.
+4. Open a terminal.
 
 ## build it
 

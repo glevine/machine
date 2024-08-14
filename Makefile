@@ -82,6 +82,16 @@ mango:
 	# Add fork as origin.
 	if ! git -C $(MANGO_HOME) remote | grep -q "^origin$$"; then git -C $(MANGO_HOME) remote add origin git@github.com:$(GITHUB_USERNAME)/Mango.git; fi
 
+define MULTIVERSE_IDE_WORKSPACE_SETTINGS
+{
+	"gopls": {
+        "formatting.local": "github.com/sugarcrm/multiverse"
+    },
+    "makefile.configureOnOpen": false,
+    "snyk.features.infrastructureAsCode": false
+}
+endef
+export MULTIVERSE_IDE_WORKSPACE_SETTINGS
 .PHONY: multiverse
 multiverse: MULTIVERSE_HOME := $(HOME)/github.com/sugarcrm/multiverse
 multiverse: EMAIL := $$(whoami)@sugarcrm.com
@@ -124,6 +134,10 @@ multiverse:
 	$(MULTIVERSE_TOOLS_BIN)/skaffold config set -g update-check false
 	$(MULTIVERSE_TOOLS_BIN)/skaffold config set -g --survey disable-prompt true
 	$(MULTIVERSE_TOOLS_BIN)/skaffold config set -g collect-metrics false
+
+	# Configure Visual Studio Code.
+	mkdir -p $(MULTIVERSE_HOME)/.vscode
+	echo "$$MULTIVERSE_IDE_WORKSPACE_SETTINGS" > $(MULTIVERSE_HOME)/.vscode/settings.json
 
 	# Clone ops-terraform-nosilo.
 	if [[ ! -d $(TERRAFORM_HOME) ]]; then git clone --recurse-submodules --remote-submodules -o upstream git@github.com:sugarcrm/ops-terraform-nosilo.git $(TERRAFORM_HOME); fi

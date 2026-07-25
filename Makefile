@@ -293,12 +293,6 @@ sugarconnect:
 	# Install Python dependencies.
 	cd $(CADENCE_HOME)/backend/main; python -m pip install --upgrade pip-tools; pip-compile requirements.in; pip-compile requirements-test.in; pip-compile requirements-dev.in; GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1 GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1 pip-sync requirements.txt requirements-test.txt requirements-dev.txt
 
-	# Install Node.js.
-	volta install node@$(NODEJS_VERSION)
-
-	# Install the latest npm.
-	volta install npm
-
 	# Configure Visual Studio Code.
 	mkdir -p $(CADENCE_HOME)/.vscode
 	echo "$$CADENCE_IDE_WORKSPACE_SETTINGS" > $(CADENCE_HOME)/.vscode/settings.json
